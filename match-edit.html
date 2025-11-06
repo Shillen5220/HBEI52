@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mecz bearbeiten - Tischtennisturnier</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #0a120f;
+            overflow-x: hidden;
+            font-family: 'Consolas', 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .match-edit-container {
+            background: linear-gradient(135deg, #0d1f15 0%, #0a1a0f 100%);
+            border: 2px solid #15fc5f;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(21, 252, 95, 0.4);
+            position: relative;
+        }
+        .match-edit-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .match-edit-title {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            color: #19ff1e;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(25, 255, 30, 0.5);
+        }
+        .match-edit-subtitle {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            color: #58f5ac;
+        }
+        .match-info {
+            background: rgba(19, 54, 34, 0.3);
+            border: 2px solid rgba(25, 255, 30, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .match-info-item {
+            color: #c5ffd4;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            margin-bottom: 8px;
+        }
+        .match-info-item strong {
+            color: #15fc5f;
+        }
+        .match-players-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .match-player {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 25px;
+            background: rgba(19, 54, 34, 0.3);
+            border: 2px solid rgba(25, 255, 30, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .match-player:hover {
+            border-color: #15fc5f;
+            box-shadow: 0 4px 16px rgba(25, 255, 30, 0.3);
+        }
+        .match-player-name {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: #15fc5f;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .score-input-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .score-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(21, 252, 95, 0.2);
+            border: 2px solid #15fc5f;
+            border-radius: 8px;
+            color: #15fc5f;
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Consolas', monospace;
+        }
+        .score-btn:hover {
+            background: rgba(21, 252, 95, 0.4);
+            transform: scale(1.1);
+        }
+        .score-btn:active {
+            transform: scale(0.95);
+        }
+        .score-display {
+            width: 80px;
+            padding: 12px;
+            background: rgba(19, 54, 34, 0.5);
+            border: 2px solid rgba(25, 255, 30, 0.3);
+            border-radius: 8px;
+            color: #c5ffd4;
+            font-family: 'Consolas', monospace;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            text-align: center;
+            font-weight: 700;
+        }
+        .score-display:focus {
+            outline: none;
+            border-color: #15fc5f;
+            background: rgba(19, 54, 34, 0.7);
+            box-shadow: 0 0 15px rgba(25, 255, 30, 0.3);
+        }
+        .match-vs {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            color: #58f5ac;
+            font-weight: 800;
+            text-align: center;
+        }
+        .match-status-section {
+            margin-bottom: 30px;
+        }
+        .match-status-label {
+            display: block;
+            color: #58f5ac;
+            font-family: 'Consolas', monospace;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .match-status-select {
+            width: 100%;
+            padding: 14px 15px;
+            background: rgba(19, 54, 34, 0.5);
+            border: 2px solid rgba(25, 255, 30, 0.3);
+            border-radius: 8px;
+            color: #c5ffd4;
+            font-family: 'Consolas', monospace;
+            font-size: clamp(1rem, 2vw, 1.1rem);
+        }
+        .match-status-select:focus {
+            outline: none;
+            border-color: #15fc5f;
+            background: rgba(19, 54, 34, 0.7);
+            box-shadow: 0 0 15px rgba(25, 255, 30, 0.3);
+        }
+        .match-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .match-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid;
+        }
+        .match-btn-save {
+            background: linear-gradient(135deg, #15fc5f 0%, #0f9d3a 100%);
+            border-color: #15fc5f;
+            color: #0a120f;
+        }
+        .match-btn-save:hover {
+            background: linear-gradient(135deg, #19ff1e 0%, #15fc5f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(25, 255, 30, 0.4);
+        }
+        .match-btn-cancel {
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #c5ffd4;
+        }
+        .match-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        .stopwatch-section {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .stopwatch-display {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            color: #15fc5f;
+            font-weight: 800;
+            font-family: 'Consolas', monospace;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(19, 54, 34, 0.3);
+            border: 2px solid rgba(25, 255, 30, 0.3);
+            border-radius: 12px;
+            text-shadow: 0 0 20px rgba(21, 252, 95, 0.5);
+            letter-spacing: 0.1em;
+        }
+        .stopwatch-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .stopwatch-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            background: rgba(19, 54, 34, 0.5);
+            border: 2px solid rgba(25, 255, 30, 0.3);
+            border-radius: 8px;
+            color: #c5ffd4;
+            font-family: 'Consolas', monospace;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stopwatch-btn:hover {
+            border-color: #15fc5f;
+            background: rgba(19, 54, 34, 0.7);
+            color: #15fc5f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 255, 30, 0.3);
+        }
+        .stopwatch-btn:active {
+            transform: translateY(0);
+        }
+        .stopwatch-btn.start {
+            background: linear-gradient(135deg, rgba(21, 252, 95, 0.2) 0%, rgba(15, 157, 58, 0.2) 100%);
+            border-color: #15fc5f;
+            color: #15fc5f;
+        }
+        .stopwatch-btn.stop {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(204, 0, 0, 0.2) 100%);
+            border-color: #ff6666;
+            color: #ff6666;
+        }
+        .stopwatch-btn.reset {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.5);
+            color: #ffc107;
+        }
+        @media (max-width: 768px) {
+            .match-edit-container {
+                padding: 30px 20px;
+            }
+            .match-players-container {
+                flex-direction: column;
+            }
+            .match-vs {
+                margin: 10px 0;
+            }
+            .score-input-container {
+                gap: 8px;
+            }
+            .score-btn {
+                width: 40px;
+                height: 40px;
+            }
+            .stopwatch-display {
+                font-size: clamp(1.5rem, 8vw, 2.5rem);
+                padding: 15px;
+            }
+            .stopwatch-controls {
+                flex-direction: column;
+            }
+            .stopwatch-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="match-edit-container">
+        <div class="match-edit-header">
+            <h1 class="match-edit-title">Mecz bearbeiten</h1>
+            <p class="match-edit-subtitle" id="matchRound">Runde</p>
+        </div>
+        
+        <div class="match-info" id="matchInfo">
+            <div class="match-info-item"><strong>Spieler 1:</strong> <span id="infoPlayer1">-</span></div>
+            <div class="match-info-item"><strong>Spieler 2:</strong> <span id="infoPlayer2">-</span></div>
+        </div>
+        
+        <div class="match-players-container">
+            <div class="match-player">
+                <div class="match-player-name" id="player1Name">Spieler 1</div>
+                <div class="score-input-container">
+                    <button type="button" class="score-btn" id="player1Minus">−</button>
+                    <input type="number" id="player1Score" class="score-display" min="0" max="50" value="0" readonly>
+                    <button type="button" class="score-btn" id="player1Plus">+</button>
+                </div>
+            </div>
+            
+            <div class="match-vs">VS</div>
+            
+            <div class="match-player">
+                <div class="match-player-name" id="player2Name">Spieler 2</div>
+                <div class="score-input-container">
+                    <button type="button" class="score-btn" id="player2Minus">−</button>
+                    <input type="number" id="player2Score" class="score-display" min="0" max="50" value="0" readonly>
+                    <button type="button" class="score-btn" id="player2Plus">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stopwatch-section">
+            <div class="stopwatch-display" id="stopwatchDisplay">00:00:00</div>
+            <div class="stopwatch-controls">
+                <button type="button" class="stopwatch-btn start" id="stopwatchStart">Start</button>
+                <button type="button" class="stopwatch-btn stop" id="stopwatchStop" disabled>Stop</button>
+                <button type="button" class="stopwatch-btn reset" id="stopwatchReset">Reset</button>
+            </div>
+        </div>
+        
+        <div class="match-status-section">
+            <label class="match-status-label" for="matchStatus">Status</label>
+            <select id="matchStatus" class="match-status-select">
+                <option value="pending">Ausstehend</option>
+                <option value="complete">Abgeschlossen</option>
+            </select>
+        </div>
+        
+        <div class="match-actions">
+            <button type="button" class="match-btn match-btn-cancel" id="cancelBtn">Abbrechen</button>
+            <button type="button" class="match-btn match-btn-save" id="saveBtn">Speichern</button>
+        </div>
+    </div>
+    
+    <script>
+    // Get match data from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const roundIndex = parseInt(urlParams.get('round'));
+    const matchIndex = parseInt(urlParams.get('match'));
+    
+    let tournamentData = null;
+    let currentMatch = null;
+    
+    // DOM elements
+    const player1Name = document.getElementById('player1Name');
+    const player2Name = document.getElementById('player2Name');
+    const player1Score = document.getElementById('player1Score');
+    const player2Score = document.getElementById('player2Score');
+    const matchStatus = document.getElementById('matchStatus');
+    const matchRound = document.getElementById('matchRound');
+    const infoPlayer1 = document.getElementById('infoPlayer1');
+    const infoPlayer2 = document.getElementById('infoPlayer2');
+    
+    // Load tournament data
+    function loadMatchData() {
+        const savedData = localStorage.getItem('tournamentData');
+        if (!savedData) {
+            alert('Fehler: Keine Turnierdaten gefunden.');
+            window.close();
+            return;
+        }
+        
+        try {
+            tournamentData = JSON.parse(savedData);
+            
+            if (!tournamentData.rounds || !tournamentData.rounds[roundIndex]) {
+                alert('Fehler: Runde nicht gefunden.');
+                window.close();
+                return;
+            }
+            
+            const round = tournamentData.rounds[roundIndex];
+            if (!round.matches || !round.matches[matchIndex]) {
+                alert('Fehler: Mecz nicht gefunden.');
+                window.close();
+                return;
+            }
+            
+            currentMatch = round.matches[matchIndex];
+            
+            // Populate form
+            player1Name.textContent = currentMatch.player1 || 'Spieler 1';
+            player2Name.textContent = currentMatch.player2 || 'Spieler 2';
+            player1Score.value = (currentMatch.score1 !== null && currentMatch.score1 !== undefined) ? currentMatch.score1 : 0;
+            player2Score.value = (currentMatch.score2 !== null && currentMatch.score2 !== undefined) ? currentMatch.score2 : 0;
+            matchStatus.value = currentMatch.status || 'pending';
+            matchRound.textContent = round.name || 'Runde';
+            
+            infoPlayer1.textContent = currentMatch.player1 || '-';
+            infoPlayer2.textContent = currentMatch.player2 || '-';
+            
+        } catch (e) {
+            console.error('Error loading match data:', e);
+            alert('Fehler beim Laden der Match-Daten.');
+            window.close();
+        }
+    }
+    
+    // Score buttons
+    document.getElementById('player1Plus').addEventListener('click', function() {
+        const current = parseInt(player1Score.value);
+        if (current < 50) {
+            player1Score.value = current + 1;
+        }
+    });
+    
+    document.getElementById('player1Minus').addEventListener('click', function() {
+        const current = parseInt(player1Score.value);
+        if (current > 0) {
+            player1Score.value = current - 1;
+        }
+    });
+    
+    document.getElementById('player2Plus').addEventListener('click', function() {
+        const current = parseInt(player2Score.value);
+        if (current < 50) {
+            player2Score.value = current + 1;
+        }
+    });
+    
+    document.getElementById('player2Minus').addEventListener('click', function() {
+        const current = parseInt(player2Score.value);
+        if (current > 0) {
+            player2Score.value = current - 1;
+        }
+    });
+    
+    // Stopwatch functionality
+    let stopwatchInterval = null;
+    let stopwatchSeconds = 0;
+    let stopwatchRunning = false;
+    
+    const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+    const stopwatchStart = document.getElementById('stopwatchStart');
+    const stopwatchStop = document.getElementById('stopwatchStop');
+    const stopwatchReset = document.getElementById('stopwatchReset');
+    
+    function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+    
+    function updateStopwatchDisplay() {
+        stopwatchDisplay.textContent = formatTime(stopwatchSeconds);
+    }
+    
+    stopwatchStart.addEventListener('click', function() {
+        if (!stopwatchRunning) {
+            stopwatchRunning = true;
+            stopwatchStart.disabled = true;
+            stopwatchStop.disabled = false;
+            
+            stopwatchInterval = setInterval(function() {
+                stopwatchSeconds++;
+                updateStopwatchDisplay();
+            }, 1000);
+        }
+    });
+    
+    stopwatchStop.addEventListener('click', function() {
+        if (stopwatchRunning) {
+            stopwatchRunning = false;
+            stopwatchStart.disabled = false;
+            stopwatchStop.disabled = true;
+            
+            if (stopwatchInterval) {
+                clearInterval(stopwatchInterval);
+                stopwatchInterval = null;
+            }
+        }
+    });
+    
+    stopwatchReset.addEventListener('click', function() {
+        stopwatchRunning = false;
+        stopwatchSeconds = 0;
+        stopwatchStart.disabled = false;
+        stopwatchStop.disabled = true;
+        
+        if (stopwatchInterval) {
+            clearInterval(stopwatchInterval);
+            stopwatchInterval = null;
+        }
+        
+        updateStopwatchDisplay();
+    });
+    
+    // Initialize stopwatch display
+    updateStopwatchDisplay();
+    
+    // Allow direct input (but still keep buttons)
+    player1Score.addEventListener('input', function() {
+        let value = parseInt(this.value);
+        if (isNaN(value) || value < 0) value = 0;
+        if (value > 50) value = 50;
+        this.value = value;
+    });
+    
+    player2Score.addEventListener('input', function() {
+        let value = parseInt(this.value);
+        if (isNaN(value) || value < 0) value = 0;
+        if (value > 50) value = 50;
+        this.value = value;
+    });
+    
+    // Make inputs editable
+    player1Score.removeAttribute('readonly');
+    player2Score.removeAttribute('readonly');
+    
+    // Save match
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        if (!tournamentData || !tournamentData.rounds || !tournamentData.rounds[roundIndex]) {
+            alert('Fehler: Keine Turnierdaten gefunden.');
+            return;
+        }
+        
+        const round = tournamentData.rounds[roundIndex];
+        if (!round.matches || !round.matches[matchIndex]) {
+            alert('Fehler: Mecz nicht gefunden.');
+            return;
+        }
+        
+        const match = round.matches[matchIndex];
+        let score1 = parseInt(player1Score.value);
+        let score2 = parseInt(player2Score.value);
+        
+        // Validate scores
+        if (isNaN(score1)) score1 = 0;
+        if (isNaN(score2)) score2 = 0;
+        if (score1 < 0) score1 = 0;
+        if (score2 < 0) score2 = 0;
+        if (score1 > 50) score1 = 50;
+        if (score2 > 50) score2 = 50;
+        
+        const status = matchStatus.value;
+        
+        // Update match data directly in tournamentData
+        match.score1 = score1;
+        match.score2 = score2;
+        match.status = status;
+        
+        // Determine winner
+        if (status === 'complete' && score1 !== score2 && match.player1 && match.player2) {
+            match.winner = score1 > score2 ? match.player1 : match.player2;
+        } else {
+            match.winner = null;
+        }
+        
+        // Save to localStorage
+        const dataToSave = JSON.stringify(tournamentData);
+        localStorage.setItem('tournamentData', dataToSave);
+        
+        console.log('Match saved:', match);
+        console.log('Score1:', score1, 'Score2:', score2);
+        console.log('Tournament data saved, first round first match:', tournamentData.rounds[0].matches[0]);
+        
+        // Verify data was saved
+        const verifyData = localStorage.getItem('tournamentData');
+        if (verifyData) {
+            const verifyParsed = JSON.parse(verifyData);
+            console.log('Verified saved data, first round first match:', verifyParsed.rounds[0].matches[0]);
+        }
+        
+        // Notify parent window to refresh - try multiple times
+        if (window.opener && !window.opener.closed) {
+            try {
+                window.opener.postMessage('refreshTables', '*');
+                console.log('Refresh message sent to parent');
+                
+                // Also try sending after a delay
+                setTimeout(function() {
+                    if (window.opener && !window.opener.closed) {
+                        window.opener.postMessage('refreshTables', '*');
+                        console.log('Second refresh message sent');
+                    }
+                }, 200);
+            } catch (e) {
+                console.error('Error sending message:', e);
+            }
+        }
+        
+        alert('Mecz wurde erfolgreich aktualisiert.');
+        
+        // Small delay before closing to ensure message is sent
+        setTimeout(function() {
+            window.close();
+        }, 300);
+    });
+    
+    // Cancel
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        window.close();
+    });
+    
+    // Load data on page load
+    loadMatchData();
+    </script>
+</body>
+</html>
+
